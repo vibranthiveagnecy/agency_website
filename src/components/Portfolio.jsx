@@ -12,11 +12,11 @@ import Banner from "../assets/Banner_1.jpg";
 // import Social from "../assets/Poster_2.jpg";
 
 const projects = [
-  { title: "Logo Design", image: branding, category: "Branding" },
-  { title: "Web Development", image: webDesign, category: "Web" },
-  { title: "Product Packaging", image: packaging, category: "Packaging" },
-  { title: "Brand Guidelines", image: branding1, category: "Branding" },
-  { title: "Banner", image: Banner, category: "Web" },
+  { id: 1, title: "Logo Design", image: branding, category: "Branding" },
+  { id: 2, title: "Web Development", image: webDesign, category: "Web" },
+  { id: 3, title: "Product Packaging", image: packaging, category: "Packaging" },
+  { id: 4, title: "Brand Guidelines", image: branding1, category: "Branding" },
+  { id: 5, title: "Banner", image: Banner, category: "Web" },
   // { title: "Poster", image: Social, category: "Social" },
 ];
 
@@ -66,9 +66,9 @@ const OurWork = () => {
       {/* Work Grid */}
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
         <AnimatePresence>
-          {filtered.map((project, index) => (
+          {filtered.map((project) => (
             <Motion.div
-              key={project.title + index}
+              key={project.id}
               layout
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
