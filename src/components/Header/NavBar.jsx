@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Menu, X } from "lucide-react";
+// Ensure this path is correct relative to your src folder
+import logoImg from "./../../assets/logo.png"; 
 
 const links = [
   { name: "Home", id: "header" },
@@ -16,36 +18,31 @@ const NavBar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [activeLink, setActiveLink] = useState("header");
 
-  // Scroll listener with throttling
+  // Optimized Scroll listener
   useEffect(() => {
-    let ticking = false;
-    
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setScrolled(window.scrollY > 30);
-          ticking = false;
-        });
-        ticking = true;
-      }
+      // Using 50px as a threshold for better visual transition
+      setScrolled(window.scrollY > 50);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Scrollspy with IntersectionObserver
+  // Scrollspy logic
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveLink(entry.target.id);
-          }
-        });
-      },
-      { threshold: 0.5, rootMargin: "-15% 0px -35% 0px" }
-    );
+    const observerOptions = {
+      threshold: 0.6, // Section must be 60% visible to trigger
+      rootMargin: "-80px 0px 0px 0px" // Offset for the fixed header
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveLink(entry.target.id);
+        }
+      });
+    }, observerOptions);
 
     links.forEach((link) => {
       const section = document.getElementById(link.id);
@@ -55,27 +52,22 @@ const NavBar = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Close mobile menu on escape key
+  // Prevent body scroll & Handle Escape key
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === "Escape" && menuOpen) {
-        setMenuOpen(false);
-      }
+      if (e.key === "Escape") setMenuOpen(false);
     };
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [menuOpen]);
-
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
     if (menuOpen) {
       document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", handleEscape);
     } else {
       document.body.style.overflow = "";
     }
+
     return () => {
       document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [menuOpen]);
 
@@ -86,8 +78,10 @@ const NavBar = () => {
     const element = document.getElementById(id);
     if (element) {
       const offset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
 
       window.scrollTo({
         top: offsetPosition,
@@ -99,42 +93,50 @@ const NavBar = () => {
   return (
     <>
       <nav
-        className={`w-full fixed top-0 z-50 transition-all duration-300 ${
-          scrolled ? "shadow-md backdrop-blur-md" : ""
+        className={`w-full fixed top-0 z-50 transition-all duration-500 ${
+          scrolled ? "py-3 shadow-lg backdrop-blur-lg" : "py-5"
         }`}
         style={{
           background: scrolled
-            ? "linear-gradient(to right, #e0f2ff 0%, #ffffff 100%)"
+            ? "linear-gradient(to right, rgba(224, 242, 255, 0.9) 0%, rgba(255, 255, 255, 0.9) 100%)"
             : "transparent",
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          {/* Logo */}
-          <a 
-            href="#header" 
-            onClick={(e) => handleLinkClick(e, "header")}
-            className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-purple-500 to-cyan-400 text-transparent bg-clip-text drop-shadow-md hover:opacity-80 transition-opacity cursor-pointer"
-          >
-            Vibranthive Agency
-          </a>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          {/* Logo Section */}
+          <div className="flex items-center gap-3">
+  <a 
+    href="#header" 
+    onClick={(e) => handleLinkClick(e, "header")} 
+    className="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer"
+    aria-label="Back to top"
+  >
+    <img 
+      src={logoImg} 
+      alt="Vibranthive Logo" 
+      className="h-10 w-auto object-contain" 
+    />
+    <span className="text-xl font-extrabold bg-gradient-to-r from-blue-700 via-purple-500 to-cyan-400 text-transparent bg-clip-text">
+      Vibranthive
+    </span>
+  </a>
+</div>
 
           {/* Desktop Nav */}
-          <ul className="hidden md:flex space-x-8 font-medium tracking-wide">
+          <ul className="hidden md:flex space-x-8 font-medium">
             {links.map((link) => (
               <li key={link.id}>
                 <a
                   href={`#${link.id}`}
                   onClick={(e) => handleLinkClick(e, link.id)}
-                  className={`relative transition duration-300 ${
-                    activeLink === link.id
-                      ? "text-blue-700 font-semibold"
-                      : "text-gray-800 hover:text-blue-600"
+                  className={`relative py-2 transition-colors duration-300 ${
+                    activeLink === link.id ? "text-blue-700" : "text-gray-700 hover:text-blue-600"
                   }`}
                 >
                   {link.name}
-                  {activeLink === link.id && (
-                    <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-blue-700 rounded-full"></span>
-                  )}
+                  <span className={`absolute bottom-0 left-0 h-0.5 bg-blue-700 transition-all duration-300 ${
+                    activeLink === link.id ? "w-full" : "w-0"
+                  }`} />
                 </a>
               </li>
             ))}
@@ -143,9 +145,8 @@ const NavBar = () => {
           {/* Mobile Icon */}
           <button 
             onClick={() => setMenuOpen(!menuOpen)} 
+            className="md:hidden p-2 text-gray-900"
             aria-label="Toggle Menu"
-            aria-expanded={menuOpen}
-            className="md:hidden text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
@@ -153,30 +154,27 @@ const NavBar = () => {
       </nav>
 
       {/* Mobile Menu Overlay */}
-      {menuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 z-40 md:hidden transition-opacity"
-          onClick={() => setMenuOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+      <div 
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300 ${
+          menuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMenuOpen(false)}
+      />
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Panel */}
       <div
-        className={`md:hidden fixed top-[72px] left-0 right-0 bg-white/95 text-gray-900 z-40 backdrop-blur-lg shadow-lg transform transition-all duration-300 ${
-          menuOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+        className={`md:hidden fixed top-0 right-0 w-[70%] h-full bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+          menuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="py-6 flex flex-col items-center space-y-5">
+        <div className="flex flex-col p-8 pt-24 space-y-6">
           {links.map((link) => (
             <a
               key={link.id}
               href={`#${link.id}`}
               onClick={(e) => handleLinkClick(e, link.id)}
-              className={`text-lg font-medium transition w-full text-center py-2 ${
-                activeLink === link.id 
-                  ? "text-blue-700 font-semibold bg-blue-50" 
-                  : "hover:text-blue-600 hover:bg-gray-50"
+              className={`text-xl font-semibold border-b border-gray-100 pb-2 ${
+                activeLink === link.id ? "text-blue-700" : "text-gray-800"
               }`}
             >
               {link.name}
