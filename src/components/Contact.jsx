@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import emailjs from "emailjs-com";
-import { motion as Motion} from "framer-motion";
+import axios from "axios"; // ✅ CHANGED: Import Axios instead of EmailJS
+import { motion as Motion } from "framer-motion";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -10,27 +10,47 @@ const Contact = () => {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // 👇 PASTE YOUR VERCEL URL HERE
+  // Example: "https://email-service-mauve.vercel.app/api/send-email"
+  const BACKEND_URL = "https://email-service-eta-gules.vercel.app/send-email"; 
+
   useEffect(() => {
     AOS.init({ duration: 800, once: true });
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    emailjs
-      .sendForm("service_xxx", "template_xxx", formRef.current, "user_xxx")
-      .then(() => {
+    // 1. Extract values from the form
+    const formData = new FormData(formRef.current);
+    
+    // 2. Prepare the data for your Backend
+    // Note: We map 'user_email' from the form to 'email' for the backend
+    const payload = {
+      name: formData.get("name"),
+      email: formData.get("user_email"), 
+      message: formData.get("message"),
+    };
+
+    try {
+      // 3. Send the request
+      const response = await axios.post(BACKEND_URL, payload);
+
+      // 4. Handle Success
+      if (response.data.success) {
         setSubmitted(true);
-        formRef.current.reset();
+        formRef.current.reset(); // Clear the inputs
         setTimeout(() => setSubmitted(false), 4000);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError(true);
-        setTimeout(() => setError(false), 4000);
-        setLoading(false);
-      });
+      }
+    } catch (err) {
+      // 5. Handle Error
+      console.error("Submission Error:", err);
+      setError(true);
+      setTimeout(() => setError(false), 4000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,7 +65,7 @@ const Contact = () => {
           <p className="text-blue-700">We’d love to hear about your next project.</p>
           <div>
             <h4 className="font-semibold text-blue-900">Email</h4>
-            <p className="text-black-700">hello@youragency.com</p>
+            <p className="text-black-700">vibranthiveagnecy@gmail.com</p>
           </div>
           <div>
             <h4 className="font-semibold text-blue-900">Phone</h4>
@@ -84,7 +104,7 @@ const Contact = () => {
               name="name"
               required
               placeholder="Your Name"
-              className="mt-1 w-full rounded-md border border-blue-200 focus:ring-blue-600 focus:border-blue-600 shadow-sm"
+              className="mt-1 w-full rounded-md border border-blue-200 focus:ring-blue-600 focus:border-blue-600 shadow-sm p-2"
             />
           </div>
           <div>
@@ -94,7 +114,7 @@ const Contact = () => {
               name="user_email"
               required
               placeholder="you@example.com"
-              className="mt-1 w-full rounded-md border border-blue-200 focus:ring-blue-600 focus:border-blue-600 shadow-sm"
+              className="mt-1 w-full rounded-md border border-blue-200 focus:ring-blue-600 focus:border-blue-600 shadow-sm p-2"
             />
           </div>
           <div>
@@ -104,13 +124,13 @@ const Contact = () => {
               rows="5"
               required
               placeholder="Write your message..."
-              className="mt-1 w-full rounded-md border border-blue-200 focus:ring-blue-600 focus:border-blue-600 shadow-sm"
+              className="mt-1 w-full rounded-md border border-blue-200 focus:ring-blue-600 focus:border-blue-600 shadow-sm p-2"
             ></textarea>
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-700 text-white py-3 px-4 rounded-md hover:bg-blue-800 transition transform hover:scale-105"
+            className="w-full bg-blue-700 text-white py-3 px-4 rounded-md hover:bg-blue-800 transition transform hover:scale-105 disabled:bg-gray-400 disabled:transform-none"
           >
             {loading ? "Sending..." : "Send Message"}
           </button>
