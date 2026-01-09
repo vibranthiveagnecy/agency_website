@@ -1,8 +1,9 @@
 import React, { Suspense, lazy } from 'react';
 import './index.css';
 
-// Immediate Load (Above the fold)
+
 import Header from './components/Header/Header';
+import WhatsAppBtn from './components/WhatsAppBtn';
 
 // Lazy Load (Below the fold)
 const About = lazy(() => import('./components/About'));
@@ -22,11 +23,11 @@ const SectionLoader = () => (
 
 function App() {
   return (
-    <div className="font-sans text-gray-800 antialiased">
-      {/* The Header/Navbar stays visible immediately */}
+    <div className="font-sans text-gray-800 antialiased relative">
+
       <Header />
 
-      {/* Suspense handles the loading state of lazy-loaded components */}
+    
       <Suspense fallback={<SectionLoader />}>
         <main>
           <About />
@@ -38,6 +39,8 @@ function App() {
         </main>
         <Footer />
       </Suspense>
+
+      <WhatsAppBtn />
     </div>
   );
 }
